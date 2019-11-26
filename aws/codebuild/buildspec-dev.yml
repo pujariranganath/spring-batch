@@ -1,0 +1,39 @@
+version: 0.1
+
+phases:
+  install:
+    #If you use the Ubuntu standard image 2.0 or later, you must specify runtime-versions.
+    #If you specify runtime-versions and use an image other than Ubuntu standard image 2.0, the build fails.
+    runtime-versions:
+       java : openjdk8
+       docker: 18
+      # name: version
+   # commands:
+    #   - aws s3 cp s3://hssrd-artifactory-691339910992-us-east-1/softwares/grails-2.5.1.zip . && unzip grails-2.5.1.zip
+    #   - export GRAILS_HOME="`pwd`/grails-2.5.1"
+    #   - export PATH="$PATH:$GRAILS_HOME/bin"
+     #  - echo "GRAILS_HOME = $GRAILS_HOME, PATH = $PATH, JAVA_HOME= $JAVA_HOME"
+  pre_build:
+    commands:
+       - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+  build:
+    commands:
+       - mvn clean package
+       - ls -ltr target
+  post_build:
+    commands:
+       - TAG_VERSION=$(aws ecr describe-images --repository-name ${MY_ECR_REPO} --output text --query 'sort_by(imageDetails,& imagePushedAt)[*].imageTags[*]' | tr '\t' '\n' | tail -1)
+       - NEW_TAG_VERSION=$(expr $TAG_VERSION + 1)
+       - docker build -t ${MY_ECR_REPO}:$NEW_TAG_VERSION .
+       - docker tag ${MY_ECR_REPO}:$NEW_TAG_VERSION $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/${MY_ECR_REPO}:$NEW_TAG_VERSION
+       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/${MY_ECR_REPO}:$NEW_TAG_VERSION
+#artifacts:
+  #files:
+    # - location
+    # - location
+  #name: $(date +%Y-%m-%d)
+  #discard-paths: yes
+  #base-directory: location
+#cache:
+  #paths:
+    # - paths
