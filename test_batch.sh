@@ -34,7 +34,7 @@ exitIfError()
 	  msg=$(cat message.txt)
 	  AWS_ACCESS_KEY=AKIAIBZKMS32E7J4ANAQ AWS_SECRET_KEY=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 aws sns publish --topic-arn $topicARN --subject "${subj}" --message "${msg}"
 	  echo "After email sending......"
-	echo "Batch job successfully executed....test"
+	echo "Batch job successfully executed...."
   fi
 }
 
